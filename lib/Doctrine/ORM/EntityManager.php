@@ -134,6 +134,8 @@ use Doctrine\Common\Util\ClassUtils;
      */
     private $filterCollection;
 
+    private $closeTrace;
+
     /**
      * Creates a new EntityManager that operates on the given database connection
      * and uses the given Configuration and EventManager implementations.
@@ -515,6 +517,11 @@ use Doctrine\Common\Util\ClassUtils;
      */
     public function close()
     {
+        if (!$this->closed) {
+            $exception = new \Exception();
+            $this->closeTrace = $exception->getTraceAsString();
+        }
+
         $this->clear();
 
         $this->closed = true;
@@ -705,7 +712,7 @@ use Doctrine\Common\Util\ClassUtils;
     private function errorIfClosed()
     {
         if ($this->closed) {
-            throw ORMException::entityManagerClosed();
+            throw ORMException::entityManagerClosed($this->closeTrace);
         }
     }
 

@@ -124,9 +124,9 @@ class ORMException extends Exception
     /**
      * @return ORMException
      */
-    public static function entityManagerClosed()
+    public static function entityManagerClosed($trace = null)
     {
-        return new self("The EntityManager is closed.");
+        return new self("The EntityManager is closed. Close has been called here:\n" . $trace);
     }
 
     /**
