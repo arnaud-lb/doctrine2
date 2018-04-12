@@ -15,6 +15,7 @@ use Doctrine\Tests\OrmTestCase;
  */
 class CommitOrderCalculatorTest extends OrmTestCase
 {
+    /** @var CommitOrderCalculator */
     private $_calc;
 
     protected function setUp()
@@ -64,6 +65,27 @@ class CommitOrderCalculatorTest extends OrmTestCase
 
         // There is only 1 valid ordering for this constellation
         $correctOrder = [$class2, $class1];
+
+        $this->assertSame($correctOrder, $sorted);
+    }
+
+    public function testCommitOrdering3()
+    {
+        $class1 = new ClassMetadata(NodeClass1::class);
+        $class2 = new ClassMetadata(NodeClass2::class);
+        $class3 = new ClassMetadata(NodeClass3::class);
+
+        $this->_calc->addNode($class1->name, $class1);
+        $this->_calc->addNode($class2->name, $class2);
+        $this->_calc->addNode($class3->name, $class3);
+
+        $this->_calc->addDependency($class2->name, $class1->name, 1);
+        $this->_calc->addDependency($class1->name, $class2->name, 0);
+        $this->_calc->addDependency($class1->name, $class3->name, 1);
+
+        $sorted = $this->_calc->sort();
+        
+        $correctOrder = [$class2, $class1, $class3];
 
         $this->assertSame($correctOrder, $sorted);
     }
