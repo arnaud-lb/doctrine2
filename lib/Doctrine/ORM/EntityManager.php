@@ -125,6 +125,11 @@ use Doctrine\Common\Util\ClassUtils;
     private $closed = false;
 
     /**
+     * @var ORMException|null
+     */
+    private $closedWhere = null;
+
+    /**
      * Collection of query filters.
      *
      * @var \Doctrine\ORM\Query\FilterCollection
@@ -551,6 +556,7 @@ use Doctrine\Common\Util\ClassUtils;
         $this->clear();
 
         $this->closed = true;
+        $this->closedWhere = ORMException::entityManagerClosedHere();
     }
 
     /**
@@ -738,7 +744,7 @@ use Doctrine\Common\Util\ClassUtils;
     private function errorIfClosed()
     {
         if ($this->closed) {
-            throw ORMException::entityManagerClosed();
+            throw ORMException::entityManagerClosed($this->closedWhere);
         }
     }
 
