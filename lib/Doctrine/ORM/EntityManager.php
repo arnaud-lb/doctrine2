@@ -127,6 +127,11 @@ use Throwable;
     private $closed = false;
 
     /**
+     * @var ORMException|null
+     */
+    private $closedWhere = null;
+
+    /**
      * Collection of query filters.
      *
      * @var \Doctrine\ORM\Query\FilterCollection
@@ -239,7 +244,7 @@ use Throwable;
 
             return $return ?: true;
         } catch (Throwable $e) {
-            $this->close();
+            $this->close($e);
             $this->conn->rollBack();
 
             throw $e;
@@ -557,11 +562,12 @@ use Throwable;
     /**
      * {@inheritDoc}
      */
-    public function close()
+    public function close(?\Throwable $e = null)
     {
         $this->clear();
 
         $this->closed = true;
+        $this->closedWhere = ORMException::entityManagerClosedHere($e);
     }
 
     /**
@@ -753,7 +759,7 @@ use Throwable;
     private function errorIfClosed()
     {
         if ($this->closed) {
-            throw ORMException::entityManagerClosed();
+            throw ORMException::entityManagerClosed($this->closedWhere);
         }
     }
 
