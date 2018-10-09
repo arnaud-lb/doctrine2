@@ -139,21 +139,29 @@ class ORMException extends Exception
     /**
      * @return ORMException
      */
-    public static function entityManagerClosed(\Exception $closedWhere = null)
+    public static function entityManagerClosed(?\Throwable $closedWhere = null)
     {
         if (null === $closedWhere) {
             return new self("The EntityManager is closed.");
         }
 
-        return new self("The EntityManager is closed (see previous exception).", 0, $closedWhere);
+        return new self("The EntityManager is closed (previous exception allows to trace back to where it was closed).", 0, $closedWhere);
     }
 
     /**
      * @return ORMException
      */
-    public static function entityManagerClosedHere()
+    public static function entityManagerClosedHere(?\Throwable $cause = null)
     {
-        return new self("The EntityManager was closed here");
+        if (null === $cause) {
+            return new self("This exception allows to trace back to where close() was called.");
+        }
+
+        return new self(
+            "This exception allows to trace back to where close() was called (see previous exception for the cause).",
+            0,
+            $cause
+        );
     }
 
     /**

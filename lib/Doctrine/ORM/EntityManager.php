@@ -242,7 +242,7 @@ use Doctrine\Common\Util\ClassUtils;
 
             return $return ?: true;
         } catch (Exception $e) {
-            $this->close();
+            $this->close($e);
             $this->conn->rollback();
 
             throw $e;
@@ -551,12 +551,12 @@ use Doctrine\Common\Util\ClassUtils;
     /**
      * {@inheritDoc}
      */
-    public function close()
+    public function close(?\Throwable $e = null)
     {
         $this->clear();
 
         $this->closed = true;
-        $this->closedWhere = ORMException::entityManagerClosedHere();
+        $this->closedWhere = ORMException::entityManagerClosedHere($e);
     }
 
     /**
