@@ -1119,5 +1119,21 @@ class EntityRepositoryTest extends OrmFunctionalTestCase
             $this->assertTrue(in_array($user, [$user1, $user2]));
         }
     }
-}
 
+    public function testPersistFindBy()
+    {
+        $user = new CmsUser();
+        $user->username = 'jdoe';
+        $user->name = 'John';
+
+        $this->_em->persist($user);
+        // Note: no flush
+
+        $users = $this
+            ->_em
+            ->getRepository(CmsUser::class)
+            ->findBy(['username' => 'jdoe']);
+
+        $this->assertCount(1, $users);
+    }
+}
