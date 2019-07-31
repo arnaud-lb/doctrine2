@@ -21,6 +21,9 @@ namespace Doctrine\ORM\Query;
 
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Query\AST\Functions;
+use function in_array;
+use function strpos;
 
 /**
  * An LL(*) recursive-descent parser for the context-free grammar of the Doctrine Query Language.
@@ -461,7 +464,7 @@ class Parser
     public function semanticalError($message = '', $token = null)
     {
         if ($token === null) {
-            $token = $this->lexer->lookahead;
+            $token = $this->lexer->lookahead ?? ['position' => null];
         }
 
         // Minimum exposed chars ahead of token
@@ -528,7 +531,7 @@ class Parser
      */
     private function isMathOperator($token)
     {
-        return in_array($token['type'], array(Lexer::T_PLUS, Lexer::T_MINUS, Lexer::T_DIVIDE, Lexer::T_MULTIPLY));
+        return $token !== null && in_array($token['type'], array(Lexer::T_PLUS, Lexer::T_MINUS, Lexer::T_DIVIDE, Lexer::T_MULTIPLY));
     }
 
     /**
@@ -543,7 +546,7 @@ class Parser
 
         $this->lexer->resetPeek();
 
-        return ($lookaheadType >= Lexer::T_IDENTIFIER && $peek['type'] === Lexer::T_OPEN_PARENTHESIS);
+        return $lookaheadType >= Lexer::T_IDENTIFIER && $peek !== null && $peek['type'] === Lexer::T_OPEN_PARENTHESIS;
     }
 
     /**
@@ -838,7 +841,7 @@ class Parser
     {
         $this->lexer->moveNext();
 
-        switch ($this->lexer->lookahead['type']) {
+        switch ($this->lexer->lookahead['type'] ?? null) {
             case Lexer::T_SELECT:
                 $statement = $this->SelectStatement();
                 break;
@@ -1437,7 +1440,7 @@ class Parser
         // We need to check if we are in a IdentificationVariable or SingleValuedPathExpression
         $glimpse = $this->lexer->glimpse();
 
-        if ($glimpse['type'] === Lexer::T_DOT) {
+        if ($glimpse !== null && $glimpse['type'] === Lexer::T_DOT) {
             return $this->SingleValuedPathExpression();
         }
 
@@ -1481,7 +1484,7 @@ class Parser
                 $expr = $this->SimpleArithmeticExpression();
                 break;
 
-            case ($glimpse['type'] === Lexer::T_DOT):
+            case $glimpse !== null && $glimpse['type'] === Lexer::T_DOT:
                 $expr = $this->SingleValuedPathExpression();
                 break;
 
@@ -2452,9 +2455,11 @@ class Parser
         // Peek beyond the matching closing parenthesis ')'
         $peek = $this->peekBeyondClosingParenthesis();
 
-        if (in_array($peek['value'], array("=",  "<", "<=", "<>", ">", ">=", "!=")) ||
+        if ($peek !== null && (
+            in_array($peek['value'], array("=",  "<", "<=", "<>", ">", ">=", "!=")) ||
             in_array($peek['type'], array(Lexer::T_NOT, Lexer::T_BETWEEN, Lexer::T_LIKE, Lexer::T_IN, Lexer::T_IS, Lexer::T_EXISTS)) ||
-            $this->isMathOperator($peek)) {
+            $this->isMathOperator($peek)
+        )) {
             $condPrimary->simpleConditionalExpression = $this->SimpleConditionalExpression();
 
             return $condPrimary;
@@ -2806,11 +2811,11 @@ class Parser
             case Lexer::T_IDENTIFIER:
                 $peek = $this->lexer->glimpse();
 
-                if ($peek['value'] == '(') {
+                if ($peek !== null && $peek['value'] === '(') {
                     return $this->FunctionDeclaration();
                 }
 
-                if ($peek['value'] == '.') {
+                if ($peek !== null && $peek['value'] === '.') {
                     return $this->SingleValuedPathExpression();
                 }
 
@@ -2826,7 +2831,7 @@ class Parser
             default:
                 $peek = $this->lexer->glimpse();
 
-                if ($peek['value'] == '(') {
+                if ($peek !== null && $peek['value'] == '(') {
                     if ($this->isAggregateFunction($this->lexer->lookahead['type'])) {
                         return $this->AggregateExpression();
                     }
@@ -3167,7 +3172,7 @@ class Parser
 
         $escapeChar = null;
 
-        if ($this->lexer->lookahead['type'] === Lexer::T_ESCAPE) {
+        if ($this->lexer->lookahead !== null && $this->lexer->lookahead['type'] === Lexer::T_ESCAPE) {
             $this->match(Lexer::T_ESCAPE);
             $this->match(Lexer::T_STRING);
 

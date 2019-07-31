@@ -448,7 +448,7 @@ final class PersistentCollection extends AbstractLazyCollection implements Selec
      */
     public function count()
     {
-        if ( ! $this->initialized && $this->association['fetch'] === Mapping\ClassMetadataInfo::FETCH_EXTRA_LAZY) {
+        if ( ! $this->initialized && $this->association !== null && $this->association['fetch'] === Mapping\ClassMetadataInfo::FETCH_EXTRA_LAZY) {
             $persister = $this->em->getUnitOfWork()->getCollectionPersister($this->association);
 
             return $persister->count($this) + ($this->isDirty ? $this->collection->count() : 0);
