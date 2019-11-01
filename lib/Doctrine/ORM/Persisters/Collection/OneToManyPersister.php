@@ -39,6 +39,9 @@ class OneToManyPersister extends AbstractCollectionPersister
      */
     public function delete(PersistentCollection $collection)
     {
+        // Disabled because of https://github.com/doctrine/orm/issues/7697
+        return;
+
         // The only valid case here is when you have weak entities. In this
         // scenario, you have @OneToMany with orphanRemoval=true, and replacing
         // the entire collection with a new would trigger this operation.
